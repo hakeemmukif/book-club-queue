@@ -3,65 +3,290 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 23, 23, 23;
-  --background-start-rgb: 250, 250, 250;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 0, 0, 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: "Space Grotesk", sans-serif;
+  background: #000;
+  color: #fff;
+  overflow-x: hidden;
   min-height: 100vh;
 }
 
+/* Selection */
+::selection {
+  background: rgba(255, 200, 150, 0.3);
+  color: #fff;
+}
+
 @layer components {
+  /* Navigation */
+  .nav-link {
+    @apply text-white text-sm uppercase tracking-widest opacity-70 transition-opacity duration-300;
+  }
+
+  .nav-link:hover {
+    @apply opacity-100;
+  }
+
+  /* Hero styles */
+  .hero-title {
+    font-family: "Cormorant Garamond", serif;
+    text-shadow: 0 0 40px rgba(255, 200, 150, 0.3),
+      0 0 80px rgba(255, 200, 150, 0.2), 0 0 120px rgba(255, 200, 150, 0.1);
+  }
+
+  /* Section labels */
+  .section-label {
+    @apply text-xs uppercase tracking-[0.4em] text-white/40 mb-6;
+  }
+
+  /* Book title styling */
+  .book-title {
+    font-family: "Cormorant Garamond", serif;
+    @apply text-4xl md:text-5xl font-light italic leading-tight mb-4;
+  }
+
+  /* Meeting info */
+  .meeting-info {
+    @apply flex flex-col sm:flex-row gap-6 sm:gap-12 py-6 border-t border-b border-white/10;
+  }
+
+  .meeting-item {
+    @apply flex flex-col gap-2;
+  }
+
+  .meeting-label {
+    @apply text-xs uppercase tracking-widest text-white/40;
+  }
+
+  .meeting-value {
+    font-family: "Cormorant Garamond", serif;
+    @apply text-xl;
+  }
+
+  /* CTA Button */
+  .cta-button {
+    @apply inline-flex items-center gap-4 py-4 px-8 bg-transparent border border-white/30 text-white text-sm uppercase tracking-widest cursor-pointer relative overflow-hidden transition-all duration-500;
+  }
+
+  .cta-button::before {
+    content: "";
+    @apply absolute top-0 -left-full w-full h-full transition-all duration-500;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+  }
+
+  .cta-button:hover {
+    @apply border-white/80 -translate-y-0.5;
+    box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+  }
+
+  .cta-button:hover::before {
+    @apply left-full;
+  }
+
+  .cta-button svg {
+    @apply w-4 h-4 transition-transform duration-300;
+  }
+
+  .cta-button:hover svg {
+    @apply translate-x-1;
+  }
+
+  /* Past book cards */
+  .past-book-card {
+    @apply p-8 bg-white/[0.02] border border-white/5 transition-all duration-500 cursor-pointer;
+  }
+
+  .past-book-card:hover {
+    @apply bg-white/[0.05] border-white/15 -translate-y-1;
+  }
+
+  /* Modal styles */
+  .modal-overlay {
+    @apply fixed inset-0 z-[1000] flex justify-center items-center opacity-0 invisible transition-all duration-500;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
+  }
+
+  .modal-overlay.active {
+    @apply opacity-100 visible;
+  }
+
+  .modal {
+    @apply w-[90%] max-w-md p-8 md:p-12 border border-white/10 rounded-sm transition-all duration-500;
+    background: rgba(20, 20, 25, 0.9);
+    transform: translateY(50px) scale(0.95);
+  }
+
+  .modal-overlay.active .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  /* Form styles for dark theme */
+  .form-group {
+    @apply mb-6;
+  }
+
+  .form-label {
+    @apply block text-xs uppercase tracking-widest text-white/50 mb-3;
+  }
+
+  .form-input {
+    @apply w-full py-4 px-4 bg-white/[0.03] border border-white/10 text-white transition-all duration-300;
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .form-input:focus {
+    @apply outline-none border-white/40 bg-white/[0.05];
+  }
+
+  .form-input::placeholder {
+    @apply text-white/30;
+  }
+
+  .form-select {
+    @apply w-full py-4 px-4 bg-white/[0.03] border border-white/10 text-white transition-all duration-300 appearance-none cursor-pointer;
+    font-family: "Space Grotesk", sans-serif;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.5)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.5rem;
+  }
+
+  .form-select:focus {
+    @apply outline-none border-white/40 bg-white/[0.05];
+  }
+
+  .form-select option {
+    @apply bg-[#1a1a1f];
+  }
+
+  /* Submit button */
+  .submit-btn {
+    @apply w-full py-4 bg-white border-none text-black text-sm uppercase tracking-widest cursor-pointer transition-all duration-300 mt-4;
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .submit-btn:hover {
+    @apply bg-white/90 -translate-y-0.5;
+  }
+
+  .submit-btn:disabled {
+    @apply opacity-50 cursor-not-allowed translate-y-0;
+  }
+
+  /* Footer */
+  .footer-link {
+    @apply text-white/40 text-sm tracking-wide transition-colors duration-300;
+  }
+
+  .footer-link:hover {
+    @apply text-white;
+  }
+
+  /* Scroll indicator */
+  .scroll-indicator {
+    @apply absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4;
+  }
+
+  .scroll-text {
+    @apply text-xs uppercase tracking-widest text-white/50;
+  }
+
+  .scroll-line {
+    @apply w-px h-16;
+    background: linear-gradient(to bottom, #fff, transparent);
+    animation: scrollPulse 2s ease infinite;
+  }
+
+  /* Badges for dark theme */
+  .badge-dark {
+    @apply inline-flex items-center px-3 py-1 text-xs uppercase tracking-wider;
+  }
+
+  .badge-success-dark {
+    @apply bg-emerald-500/20 text-emerald-300 border border-emerald-500/30;
+  }
+
+  .badge-warning-dark {
+    @apply bg-amber-500/20 text-amber-300 border border-amber-500/30;
+  }
+
+  /* Success message dark */
+  .success-message-dark {
+    @apply p-6 rounded border;
+  }
+
+  .success-message-confirmed {
+    @apply bg-emerald-500/10 border-emerald-500/30;
+  }
+
+  .success-message-waitlist {
+    @apply bg-amber-500/10 border-amber-500/30;
+  }
+
+  /* Legacy button styles for other pages */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-white hover:bg-white/90 text-black font-medium py-3 px-6 rounded-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
+    @apply bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-sm transition-all duration-200 border border-white/20;
   }
 
   .btn-outline {
-    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-50 font-medium py-2.5 px-5 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply border border-white/30 text-white hover:bg-white/10 font-medium py-3 px-6 rounded-sm transition-all duration-200;
   }
 
+  /* Input for dark theme pages */
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white;
+    @apply w-full px-4 py-4 border border-white/20 rounded-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200 bg-white/5 text-white placeholder-white/40;
   }
 
+  /* Card for dark theme */
   .card {
+    @apply bg-white/[0.02] rounded-sm border border-white/10 overflow-hidden backdrop-blur-sm;
+  }
+
+  .card-light {
     @apply bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden;
   }
 
+  /* Badge styles */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-success {
-    @apply bg-green-100 text-green-800;
+    @apply bg-emerald-500/20 text-emerald-300;
   }
 
   .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-amber-500/20 text-amber-300;
   }
 
   .badge-info {
-    @apply bg-blue-100 text-blue-800;
+    @apply bg-blue-500/20 text-blue-300;
   }
 }
 
 /* Custom animations */
-@keyframes fade-in {
+@keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -69,18 +294,97 @@ body {
   }
 }
 
+@keyframes scrollPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.2);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 1.5s ease forwards;
+}
+
+.animate-fade-up-delay-1 {
+  animation: fadeUp 1.5s ease forwards 0.3s;
+  opacity: 0;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fadeUp 1.5s ease forwards 0.6s;
+  opacity: 0;
+}
+
+.animate-fade-up-delay-3 {
+  animation: fadeUp 1.5s ease forwards 0.9s;
+  opacity: 0;
+}
+
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Form focus styles */
-input:focus,
-textarea:focus,
-select:focus {
-  @apply ring-2 ring-primary-500 border-transparent;
+.animate-pulse-slow {
+  animation: pulse 2s ease infinite;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Loader */
+.loader {
+  @apply fixed inset-0 bg-black z-[10000] flex flex-col justify-center items-center transition-all duration-700;
+}
+
+.loader.hidden {
+  @apply opacity-0 invisible;
+}
+
+.loader-text {
+  font-family: "Cormorant Garamond", serif;
+  @apply text-2xl tracking-[0.5em];
+  animation: pulse 2s ease infinite;
+}
+
+/* Glow effect */
+.glow-text {
+  text-shadow: 0 0 40px rgba(255, 200, 150, 0.3),
+    0 0 80px rgba(255, 200, 150, 0.2), 0 0 120px rgba(255, 200, 150, 0.1);
+}
+
+/* Progress bar for dark theme */
+.progress-bar-dark {
+  @apply h-1 bg-white/10 rounded-full overflow-hidden;
+}
+
+.progress-bar-fill {
+  @apply h-full transition-all duration-500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: clamp(2.5rem, 10vw, 6rem);
+  }
 }

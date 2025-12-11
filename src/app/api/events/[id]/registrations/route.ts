@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { registrationSchema } from "@/lib/validations";
+import { generateToken } from "@/lib/utils";
+import { REGISTRATION_STATUS } from "@/lib/constants";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -45,14 +47,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { name, instagramHandle } = validationResult.data;
+    const { name, instagramHandle, email } = validationResult.data;
 
     // Get event with registration counts
     const event = await prisma.event.findUnique({
       where: { id },
       include: {
         registrations: {
-          select: { status: true, instagramHandle: true },
+          select: { status: true, email: true, instagramHandle: true },
         },
       },
     });
@@ -68,14 +70,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check for duplicate registration
+    // Check for duplicate registration by email
     const existingRegistration = event.registrations.find(
-      (r) => r.instagramHandle.toLowerCase() === instagramHandle.toLowerCase()
+      (r) => r.email?.toLowerCase() === email.toLowerCase()
     );
 
     if (existingRegistration) {
       return NextResponse.json(
-        { error: "You have already registered for this event" },
+        { error: "You have already registered for this event with this email" },
         { status: 400 }
       );
     }
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     let position: number | null = null;
 
     if (spotsLeft > 0) {
-      status = "confirmed";
+      status = REGISTRATION_STATUS.CONFIRMED;
     } else if (event.waitlistEnabled) {
       // Check waitlist limit
       if (event.waitlistLimit && waitlistCount >= event.waitlistLimit) {
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           { status: 400 }
         );
       }
-      status = "waitlist";
+      status = REGISTRATION_STATUS.WAITLIST;
       position = waitlistCount + 1;
     } else {
       return NextResponse.json(
@@ -112,14 +114,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Generate cancellation token
+    const cancelToken = generateToken();
+
     // Create registration
     const registration = await prisma.registration.create({
       data: {
         eventId: id,
         name,
-        instagramHandle,
+        instagramHandle: instagramHandle || "",
+        email,
         status,
         position,
+        cancelToken,
       },
     });
 
@@ -154,10 +161,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           id: registration.id,
           status: registration.status,
           position: registration.position,
+          cancelToken: registration.cancelToken,
         },
         message:
-          status === "confirmed"
-            ? "You're booked! Check your Instagram for a confirmation message."
+          status === REGISTRATION_STATUS.CONFIRMED
+            ? "You're booked! We'll send you a confirmation and reminder before the event."
             : `You're on the waitlist at position ${position}. We'll notify you if a spot opens up.`,
       },
       { status: 201 }

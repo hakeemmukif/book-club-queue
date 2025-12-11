@@ -2,8 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// LOCAL: provider = "sqlite", DATABASE_URL = "file:./dev.db"
+// STAGING/PROD: provider = "postgresql", DATABASE_URL = "postgresql://..."
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -19,21 +21,29 @@ model Event {
   waitlistLimit    Int?           // null means unlimited waitlist
   description      String?
   isActive         Boolean        @default(true)
+  reminderSentAt   DateTime?      // Track when reminder was sent
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   registrations    Registration[]
+
+  @@index([date])
+  @@index([isActive])
 }
 
 model Registration {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   eventId         String
   name            String
   instagramHandle String
-  status          String   @default("confirmed") // "confirmed" | "waitlist"
-  position        Int?     // position in waitlist if applicable
-  createdAt       DateTime @default(now())
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  email           String?   // Optional email for notifications
+  status          String    @default("confirmed") // "confirmed" | "waitlist"
+  position        Int?      // position in waitlist if applicable
+  cancelToken     String?   @unique // Token for self-cancellation
+  notifiedAt      DateTime? // Track when waitlist notification was sent
+  createdAt       DateTime  @default(now())
+  event           Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
   @@index([status])
+  @@index([cancelToken])
 }
