@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
@@ -24,7 +24,7 @@ interface RegistrationDetails {
   canCancel: boolean;
 }
 
-export default function CancelPage() {
+function CancelContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -230,5 +230,24 @@ export default function CancelPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent"></div>
+        <p className="mt-4 text-gray-600">Loading...</p>
+      </div>
+    </main>
+  );
+}
+
+export default function CancelPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CancelContent />
+    </Suspense>
   );
 }
