@@ -328,7 +328,7 @@ export default function HomePage() {
           </div>
 
           {/* Checkboxes */}
-          <div className="space-y-3 mb-8">
+          <div className="space-y-4 mb-8">
             <label className="flex items-start gap-3 cursor-pointer group">
               <input
                 type="checkbox"
@@ -336,9 +336,9 @@ export default function HomePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, confirmAttendance: e.target.checked })
                 }
-                className="cream-checkbox mt-0.5"
+                className="cream-checkbox flex-shrink-0 mt-1"
               />
-              <span className="text-black/70 group-hover:text-black transition-colors text-sm">
+              <span className="text-black/70 group-hover:text-black transition-colors text-sm leading-relaxed">
                 By filling this form, I confirm my attendance.
               </span>
             </label>
@@ -350,9 +350,9 @@ export default function HomePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, understandDrinkMenu: e.target.checked })
                 }
-                className="cream-checkbox mt-0.5"
+                className="cream-checkbox flex-shrink-0 mt-1"
               />
-              <span className="text-black/70 group-hover:text-black transition-colors text-sm">
+              <span className="text-black/70 group-hover:text-black transition-colors text-sm leading-relaxed">
                 I understand my ticket includes 1 Soso Signature Drink.{" "}
                 <button
                   type="button"
@@ -375,9 +375,9 @@ export default function HomePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, pledgeNotToBail: e.target.checked })
                 }
-                className="cream-checkbox mt-0.5"
+                className="cream-checkbox flex-shrink-0 mt-1"
               />
-              <span className="text-black/70 group-hover:text-black transition-colors text-sm">
+              <span className="text-black/70 group-hover:text-black transition-colors text-sm leading-relaxed">
                 I pledge to not bail.
               </span>
             </label>
