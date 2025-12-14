@@ -34,20 +34,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         instagramHandle: true,
         status: true,
         createdAt: true,
-        // Only include full receipt data when explicitly requested
-        // This improves performance for list views
-        receiptUrl: includeReceipts,
+        // Always fetch receiptUrl to check if it exists
+        receiptUrl: true,
       },
     });
 
-    // If not including full receipts, add a flag indicating if receipt exists
-    const registrationsWithFlag = includeReceipts
-      ? registrations
-      : registrations.map(reg => ({
-          ...reg,
-          hasReceipt: !!reg.receiptUrl,
-          receiptUrl: undefined,
-        }));
+    // Add hasReceipt flag and optionally strip full receipt data for performance
+    const registrationsWithFlag = registrations.map(reg => ({
+      ...reg,
+      hasReceipt: !!reg.receiptUrl,
+      // Only include full receipt data when explicitly requested (base64 can be large)
+      receiptUrl: includeReceipts ? reg.receiptUrl : undefined,
+    }));
 
     return NextResponse.json(registrationsWithFlag);
   } catch (error) {
@@ -88,16 +86,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const { name, instagramHandle, email, receiptUrl } = validationResult.data;
 
-    // Use transaction to prevent race conditions
+    // Use serializable transaction to prevent race conditions
     const result = await prisma.$transaction(async (tx) => {
-      // Get event with registration counts (inside transaction)
+      // Get event with lock for update (PostgreSQL serializable isolation)
       const event = await tx.event.findUnique({
         where: { id },
-        include: {
-          registrations: {
-            select: { status: true, email: true, instagramHandle: true },
-          },
-        },
       });
 
       if (!event) {
@@ -108,43 +101,63 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         return { error: "This event is no longer accepting registrations", status: 400 };
       }
 
-      // Check for duplicate registration by email
-      const existingRegistration = event.registrations.find(
-        (r) => r.email?.toLowerCase() === email.toLowerCase()
-      );
+      // Check for duplicate registration by email (using DB constraint as backup)
+      const existingRegistration = await tx.registration.findFirst({
+        where: {
+          eventId: id,
+          email: email, // Already lowercased by Zod transform
+        },
+      });
 
       if (existingRegistration) {
         return { error: "You have already registered for this event with this email", status: 400 };
       }
 
-      // Calculate spots
-      const confirmedCount = event.registrations.filter(
-        (r) => r.status === "confirmed"
-      ).length;
-      const spotsLeft = event.totalSpots - confirmedCount;
+      // Count confirmed registrations with lock
+      const confirmedCount = await tx.registration.count({
+        where: {
+          eventId: id,
+          status: REGISTRATION_STATUS.CONFIRMED,
+        },
+      });
 
-      // Check if event is full (no waitlist)
-      if (spotsLeft <= 0) {
+      // Check if event is full
+      if (confirmedCount >= event.totalSpots) {
         return { error: "Sorry, this event is sold out!", status: 400 };
       }
 
       // Generate cancellation token
       const cancelToken = generateToken();
 
-      // Create registration (inside same transaction)
+      // Create registration
       const registration = await tx.registration.create({
         data: {
           eventId: id,
           name,
           instagramHandle: instagramHandle || "",
           email,
-          receiptUrl: receiptUrl || null,
+          receiptUrl,
           status: REGISTRATION_STATUS.CONFIRMED,
           cancelToken,
         },
       });
 
+      // Double-check count after insert to catch race conditions
+      const finalCount = await tx.registration.count({
+        where: {
+          eventId: id,
+          status: REGISTRATION_STATUS.CONFIRMED,
+        },
+      });
+
+      // If we exceeded capacity, rollback by throwing
+      if (finalCount > event.totalSpots) {
+        throw new Error("SOLD_OUT_RACE");
+      }
+
       return { registration, event };
+    }, {
+      isolationLevel: 'Serializable', // Strictest isolation level
     });
 
     // Handle transaction errors
@@ -193,6 +206,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 201 }
     );
   } catch (error) {
+    // Handle race condition - event sold out during transaction
+    if (error instanceof Error && error.message === "SOLD_OUT_RACE") {
+      return NextResponse.json(
+        { error: "Sorry, this event just sold out! Please try again.", code: "SOLD_OUT" },
+        { status: 409 }
+      );
+    }
+
     const { message, statusCode, code } = handleError(error);
 
     // Add rate limit headers if applicable

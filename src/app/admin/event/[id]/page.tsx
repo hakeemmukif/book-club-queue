@@ -57,19 +57,19 @@ export default function AdminEventPage({ params }: Props) {
       return;
     }
 
-    // Fetch the receipt
+    // Fetch single receipt from dedicated endpoint
     setLoadingReceipt(true);
     try {
-      const res = await fetch(`/api/events/${id}/registrations?includeReceipts=true`, {
+      const res = await fetch(`/api/registrations/${registrationId}/receipt`, {
         headers: { "x-admin-password": password },
       });
       if (res.ok) {
-        const fullRegistrations = await res.json();
-        setRegistrations(fullRegistrations);
-        const found = fullRegistrations.find((r: RegistrationWithEvent) => r.id === registrationId);
-        if (found?.receiptUrl) {
-          setSelectedReceipt(found.receiptUrl);
-        }
+        const data = await res.json();
+        // Cache the receipt in local state
+        setRegistrations(prev => prev.map(r =>
+          r.id === registrationId ? { ...r, receiptUrl: data.receiptUrl } : r
+        ));
+        setSelectedReceipt(data.receiptUrl);
       }
     } catch (err) {
       console.error("Failed to fetch receipt:", err);
@@ -193,9 +193,6 @@ export default function AdminEventPage({ params }: Props) {
               )}
             </p>
           </div>
-          <button onClick={copyEventUrl} className="btn-outline whitespace-nowrap">
-            Copy Event URL
-          </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -221,6 +218,28 @@ export default function AdminEventPage({ params }: Props) {
             <p className="text-gray-900">{event.description}</p>
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 mt-6 pt-6 border-t border-gray-100">
+          <Link
+            href={`/admin/event/${id}/edit`}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit Event
+          </Link>
+          <button
+            onClick={copyEventUrl}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Copy Event URL
+          </button>
+        </div>
       </div>
 
       {/* Registrations */}

@@ -31,6 +31,14 @@ export const VALIDATION_LIMITS = {
   EMAIL_MAX: 254,
 } as const;
 
+// File upload limits
+export const FILE_UPLOAD = {
+  MAX_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
+  MAX_BASE64_SIZE: 7 * 1024 * 1024, // ~5MB file = ~7MB base64
+  VALID_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
+  VALID_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'],
+} as const;
+
 // Social links
 export const SOCIAL_LINKS = {
   instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL || "",

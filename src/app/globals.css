@@ -269,12 +269,12 @@ a, button, input, select, textarea, [role="button"], .cursor-pointer {
 
   /* Input for dark theme pages */
   .input-field {
-    @apply w-full px-4 py-4 border border-white/20 rounded-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all duration-200 bg-white/5 text-white placeholder-white/40;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-400;
   }
 
-  /* Card for dark theme */
+  /* Card */
   .card {
-    @apply bg-white/[0.02] rounded-sm border border-white/10 overflow-hidden backdrop-blur-sm;
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden;
   }
 
   .card-light {
@@ -287,15 +287,15 @@ a, button, input, select, textarea, [role="button"], .cursor-pointer {
   }
 
   .badge-success {
-    @apply bg-emerald-500/20 text-emerald-300;
+    @apply bg-emerald-100 text-emerald-700;
   }
 
   .badge-warning {
-    @apply bg-amber-500/20 text-amber-300;
+    @apply bg-amber-100 text-amber-700;
   }
 
   .badge-info {
-    @apply bg-blue-500/20 text-blue-300;
+    @apply bg-blue-100 text-blue-700;
   }
 }
 

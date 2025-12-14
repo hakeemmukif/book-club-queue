@@ -1,30 +1,37 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { FILE_UPLOAD } from "@/lib/constants";
 
-const EVENT_DATA = {
-  id: "cmj4radio002event",  // Database event ID
-  title: "EAT BOOKS RADIO",
+// Display configuration for the current event
+// These are presentation-specific fields not stored in database
+const EVENT_CONFIG = {
+  id: "cmj4radio002event",  // Database event ID - must match!
   episode: "002",
   tagline: "",
   djs: ["MALAYGIRLDIGITAL", "EDEN"],
-  date: "11 JANUARY 2026",
-  day: "SUNDAY",
-  time: "4PM - 8PM",
-  location: "SOSOHUB, PJ",
+  // Display-formatted date/time (database stores DateTime)
+  displayDate: "11 JANUARY 2025",
+  displayDay: "SATURDAY",
+  displayTime: "4PM - 6PM",
   locationUrl: "https://maps.app.goo.gl/u3hV5NnQRMpXKDvH7",
   ticket: "RM35",
   ticketNote: "includes 1 Soso Signature Drink",
-  totalSpots: 50,
-  spotsLeft: 50,
-  description: `Welcome to the second edition of Eat Books Radio — our music segment where enthusiasts come together to explore and share new sounds, and enjoy live sets by talented guest DJs, all with a yummy Soso Signature drink in hand!
-
-Get ready for a 2-hour live DJ experience featuring MALAYGIRLDIGITAL (bubblegum bass, nusantara bounce, psychedelic pop) and EDEN (baile funk, jersey club, miami bass) — a lineup guaranteed to keep your head bouncing and your body moving.
-
-ONE RULE: LESS TALKING. MORE DANCING. SHOW LOVE TO THE DJS.
-
-You'll receive a drink ticket on the day of the event—simply present it to the barista to redeem your choice of drink.`,
 };
+
+// Event data type from API
+interface EventData {
+  id: string;
+  title: string;
+  bookTitle: string;
+  location: string;
+  date: string;
+  totalSpots: number;
+  description: string | null;
+  isActive: boolean;
+  confirmedCount: number;
+  spotsLeft: number;
+}
 
 export default function HomePage() {
   const [formData, setFormData] = useState({
@@ -41,43 +48,40 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showDrinkMenu, setShowDrinkMenu] = useState(false);
-  const [spotsLeft, setSpotsLeft] = useState<number | null>(null);
-  const [loadingSpots, setLoadingSpots] = useState(true);
+  const [eventData, setEventData] = useState<EventData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch spots left on mount
+  // Fetch event data from API on mount
   useEffect(() => {
-    const fetchSpots = async () => {
+    const fetchEvent = async () => {
       try {
-        const res = await fetch(`/api/events/${EVENT_DATA.id}`);
+        const res = await fetch(`/api/events/${EVENT_CONFIG.id}`);
         if (res.ok) {
           const data = await res.json();
-          setSpotsLeft(data.spotsLeft);
+          setEventData(data);
         }
       } catch (err) {
         console.error("Failed to fetch event data:", err);
       } finally {
-        setLoadingSpots(false);
+        setLoading(false);
       }
     };
-    fetchSpots();
+    fetchEvent();
   }, []);
-
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
       setError("File size must be under 5MB");
       e.target.value = ''; // Reset input
       return;
     }
 
     // Validate file type
-    if (!VALID_FILE_TYPES.includes(file.type)) {
+    if (!FILE_UPLOAD.VALID_TYPES.includes(file.type as typeof FILE_UPLOAD.VALID_TYPES[number])) {
       setError("Please upload an image (JPG, PNG, GIF, WebP) or PDF");
       e.target.value = '';
       return;
@@ -100,28 +104,34 @@ export default function HomePage() {
     });
   };
 
+  // Form validation helper - used for both button disable state and submit validation
+  const isFormValid = () => {
+    return (
+      formData.name.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      formData.confirmAttendance &&
+      formData.understandDrinkMenu &&
+      formData.pledgeNotToBail &&
+      receiptFile !== null
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
 
-    if (
-      !formData.confirmAttendance ||
-      !formData.understandDrinkMenu ||
-      !formData.pledgeNotToBail
-    ) {
-      setError("Please confirm all required checkboxes.");
+    // Validate using shared validation function
+    if (!isFormValid()) {
+      setError("Please fill in all required fields, confirm all checkboxes, and upload your receipt.");
       setSubmitting(false);
       return;
     }
 
     try {
-      let receiptBase64: string | null = null;
-      if (receiptFile) {
-        receiptBase64 = await fileToBase64(receiptFile);
-      }
+      const receiptBase64 = await fileToBase64(receiptFile!);
 
-      const res = await fetch(`/api/events/${EVENT_DATA.id}/registrations`, {
+      const res = await fetch(`/api/events/${EVENT_CONFIG.id}/registrations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -166,7 +176,7 @@ export default function HomePage() {
               You&apos;re In!
             </h2>
             <p className="text-black/70 mb-2">
-              Your spot is secured. See you on {EVENT_DATA.date}!
+              Your spot is secured. See you on {EVENT_CONFIG.displayDate}!
             </p>
             <p className="text-black/50 text-sm">
               Can&apos;t wait to groove together!
@@ -197,42 +207,65 @@ export default function HomePage() {
       <main className="max-w-xl mx-auto px-6 py-12">
         {/* Episode Title */}
         <h1 className="text-3xl md:text-5xl font-[family-name:var(--font-cormorant)] font-bold tracking-wide text-black mb-2 whitespace-nowrap">
-          {EVENT_DATA.title}: {EVENT_DATA.episode}
+          {eventData?.title || `EAT BOOKS RADIO: ${EVENT_CONFIG.episode}`}
         </h1>
 
         {/* Featuring Line */}
-        <p className="text-black/70 mb-8">featuring {EVENT_DATA.djs.join(" & ")}</p>
+        <p className="text-black/70 mb-8">featuring {EVENT_CONFIG.djs.join(" & ")}</p>
 
         {/* Tagline */}
-        {EVENT_DATA.tagline && (
+        {EVENT_CONFIG.tagline && (
           <p className="text-xl md:text-2xl font-[family-name:var(--font-cormorant)] italic text-left mb-8">
-            &ldquo;{EVENT_DATA.tagline}&rdquo;
+            &ldquo;{EVENT_CONFIG.tagline}&rdquo;
           </p>
         )}
 
         {/* Description Box */}
         <div className="sketch-box p-6 mb-10 bg-transparent">
-          <p className="text-black/80 leading-relaxed whitespace-pre-line">{EVENT_DATA.description}</p>
+          <p className="text-black/80 leading-relaxed whitespace-pre-line">{eventData?.description || ""}</p>
+        </div>
+
+        {/* Event Details */}
+        <div className="mb-8 space-y-1">
+          <p className="text-sm tracking-wide">
+            <span className="text-black/50 uppercase">Date:</span>{" "}
+            <span className="text-black font-medium">{EVENT_CONFIG.displayDate}</span>
+          </p>
+          <p className="text-sm tracking-wide">
+            <span className="text-black/50 uppercase">Time:</span>{" "}
+            <span className="text-black font-medium">{EVENT_CONFIG.displayTime}</span>
+          </p>
+          <p className="text-sm tracking-wide">
+            <span className="text-black/50 uppercase">Venue:</span>{" "}
+            <a
+              href={EVENT_CONFIG.locationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-black font-medium underline underline-offset-2 hover:text-black/70"
+            >
+              {eventData?.location || "SOSOHUB, PJ"}
+            </a>
+          </p>
         </div>
 
         {/* Ticket Info */}
         <div className="text-left mb-10">
-          <p className="text-3xl font-[family-name:var(--font-cormorant)]">{EVENT_DATA.ticket}</p>
-          <p className="text-sm text-black/60 mt-1">{EVENT_DATA.ticketNote}</p>
+          <p className="text-3xl font-[family-name:var(--font-cormorant)]">{EVENT_CONFIG.ticket}</p>
+          <p className="text-sm text-black/60 mt-1">{EVENT_CONFIG.ticketNote}</p>
         </div>
 
         {/* RSVP Section */}
-        {loadingSpots ? (
+        {loading ? (
           <div className="text-center py-8">
             <p className="text-black/60">Loading...</p>
           </div>
-        ) : spotsLeft !== null && spotsLeft <= 0 ? (
+        ) : eventData && eventData.spotsLeft <= 0 ? (
           <div className="sketch-box p-8 text-center">
             <h2 className="text-2xl font-[family-name:var(--font-cormorant)] font-bold text-black mb-4">
               SOLD OUT
             </h2>
             <p className="text-black/70 mb-2">
-              All {EVENT_DATA.totalSpots} spots have been claimed!
+              All {eventData.totalSpots} spots have been claimed!
             </p>
             <p className="text-black/50 text-sm">
               Follow us on Instagram for future events.
@@ -241,7 +274,7 @@ export default function HomePage() {
         ) : (
         <form onSubmit={handleSubmit}>
           <h2 className="text-lg font-medium text-black mb-6 pb-2 border-b-2 border-black">
-            RSVP {spotsLeft !== null && <span className="text-black/50 font-normal">({spotsLeft} spots left)</span>}
+            RSVP {eventData && <span className="text-black/50 font-normal">({eventData.spotsLeft} spots left)</span>}
           </h2>
 
           {/* ARIA live region for screen reader announcements */}
@@ -392,7 +425,7 @@ export default function HomePage() {
 
           {/* Upload Receipt */}
           <div className="mb-8">
-            <p className="text-xs tracking-[0.15em] mb-3">UPLOAD RECEIPT</p>
+            <p className="text-xs tracking-[0.15em] mb-3">UPLOAD RECEIPT <span className="text-red-500">*</span></p>
             <input
               type="file"
               ref={fileInputRef}
@@ -447,8 +480,8 @@ export default function HomePage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={submitting}
-            className="cream-submit w-full"
+            disabled={submitting || !isFormValid()}
+            className="cream-submit w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? "Submitting..." : "SUBMIT"}
           </button>
