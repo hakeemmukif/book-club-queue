@@ -173,7 +173,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     console.error("Error creating registration:", error);
     return NextResponse.json(
-      { error: "Failed to register for event" },
+      {
+        error: "Failed to register for event",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }
