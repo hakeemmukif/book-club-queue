@@ -10,7 +10,6 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://eatbooksclu
 // Registration status
 export const REGISTRATION_STATUS = {
   CONFIRMED: "confirmed",
-  WAITLIST: "waitlist",
 } as const;
 
 export type RegistrationStatus = typeof REGISTRATION_STATUS[keyof typeof REGISTRATION_STATUS];
@@ -18,7 +17,6 @@ export type RegistrationStatus = typeof REGISTRATION_STATUS[keyof typeof REGISTR
 // Event limits
 export const EVENT_LIMITS = {
   MAX_SPOTS: 1000,
-  MAX_WAITLIST: 1000,
   MAX_TITLE_LENGTH: 200,
   MAX_DESCRIPTION_LENGTH: 2000,
   DEFAULT_DURATION_HOURS: 2,

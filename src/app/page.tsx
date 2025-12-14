@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const EVENT_DATA = {
   id: "cmj4radio002event",  // Database event ID
@@ -40,16 +40,64 @@ export default function HomePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showDrinkMenu, setShowDrinkMenu] = useState(false);
+  const [spotsLeft, setSpotsLeft] = useState<number | null>(null);
+  const [loadingSpots, setLoadingSpots] = useState(true);
+
+  // Fetch spots left on mount
+  useEffect(() => {
+    const fetchSpots = async () => {
+      try {
+        const res = await fetch(`/api/events/${EVENT_DATA.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSpotsLeft(data.spotsLeft);
+        }
+      } catch (err) {
+        console.error("Failed to fetch event data:", err);
+      } finally {
+        setLoadingSpots(false);
+      }
+    };
+    fetchSpots();
+  }, []);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setReceiptFile(file);
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setError("File size must be under 5MB");
+      e.target.value = ''; // Reset input
+      return;
     }
+
+    // Validate file type
+    if (!VALID_FILE_TYPES.includes(file.type)) {
+      setError("Please upload an image (JPG, PNG, GIF, WebP) or PDF");
+      e.target.value = '';
+      return;
+    }
+
+    setError(null);
+    setReceiptFile(file);
   };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,6 +116,11 @@ export default function HomePage() {
     }
 
     try {
+      let receiptBase64: string | null = null;
+      if (receiptFile) {
+        receiptBase64 = await fileToBase64(receiptFile);
+      }
+
       const res = await fetch(`/api/events/${EVENT_DATA.id}/registrations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,6 +128,7 @@ export default function HomePage() {
           name: formData.name,
           email: formData.email,
           instagramHandle: formData.instagramHandle,
+          receiptUrl: receiptBase64,
         }),
       });
 
@@ -142,7 +196,7 @@ export default function HomePage() {
 
       <main className="max-w-xl mx-auto px-6 py-12">
         {/* Episode Title */}
-        <h1 className="text-2xl md:text-3xl font-[family-name:var(--font-cormorant)] font-bold tracking-wide text-black mb-2">
+        <h1 className="text-3xl md:text-5xl font-[family-name:var(--font-cormorant)] font-bold tracking-wide text-black mb-2 whitespace-nowrap">
           {EVENT_DATA.title}: {EVENT_DATA.episode}
         </h1>
 
@@ -168,22 +222,43 @@ export default function HomePage() {
         </div>
 
         {/* RSVP Section */}
+        {loadingSpots ? (
+          <div className="text-center py-8">
+            <p className="text-black/60">Loading...</p>
+          </div>
+        ) : spotsLeft !== null && spotsLeft <= 0 ? (
+          <div className="sketch-box p-8 text-center">
+            <h2 className="text-2xl font-[family-name:var(--font-cormorant)] font-bold text-black mb-4">
+              SOLD OUT
+            </h2>
+            <p className="text-black/70 mb-2">
+              All {EVENT_DATA.totalSpots} spots have been claimed!
+            </p>
+            <p className="text-black/50 text-sm">
+              Follow us on Instagram for future events.
+            </p>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit}>
           <h2 className="text-lg font-medium text-black mb-6 pb-2 border-b-2 border-black">
-            RSVP
+            RSVP {spotsLeft !== null && <span className="text-black/50 font-normal">({spotsLeft} spots left)</span>}
           </h2>
 
-          {error && (
-            <div className="p-3 bg-red-100 border-2 border-red-400 text-red-700 text-sm mb-4">
-              {error}
-            </div>
-          )}
+          {/* ARIA live region for screen reader announcements */}
+          <div role="alert" aria-live="polite" aria-atomic="true">
+            {error && (
+              <div className="p-3 bg-red-100 border-2 border-red-400 text-red-700 text-sm mb-4">
+                {error}
+              </div>
+            )}
+          </div>
 
           {/* Input Fields */}
           <div className="space-y-4 mb-6">
             <div>
-              <label className="block text-xs tracking-[0.15em] mb-2">NAME</label>
+              <label htmlFor="name" className="block text-xs tracking-[0.15em] mb-2">NAME</label>
               <input
+                id="name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -194,8 +269,9 @@ export default function HomePage() {
             </div>
 
             <div>
-              <label className="block text-xs tracking-[0.15em] mb-2">EMAIL</label>
+              <label htmlFor="email" className="block text-xs tracking-[0.15em] mb-2">EMAIL</label>
               <input
+                id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -206,8 +282,9 @@ export default function HomePage() {
             </div>
 
             <div>
-              <label className="block text-xs tracking-[0.15em] mb-2">INSTAGRAM HANDLE</label>
+              <label htmlFor="instagram" className="block text-xs tracking-[0.15em] mb-2">INSTAGRAM HANDLE</label>
               <input
+                id="instagram"
                 type="text"
                 value={formData.instagramHandle}
                 onChange={(e) => setFormData({ ...formData, instagramHandle: e.target.value })}
@@ -243,7 +320,18 @@ export default function HomePage() {
                 className="cream-checkbox mt-0.5"
               />
               <span className="text-black/70 group-hover:text-black transition-colors text-sm">
-                I understand my ticket includes 1 Soso Signature Drink.
+                I understand my ticket includes 1 Soso Signature Drink.{" "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowDrinkMenu(true);
+                  }}
+                  className="underline text-black hover:text-black/70 font-medium"
+                >
+                  View Menu
+                </button>
               </span>
             </label>
 
@@ -260,6 +348,46 @@ export default function HomePage() {
                 I pledge to not bail.
               </span>
             </label>
+          </div>
+
+          {/* QR Payment */}
+          <div className="mb-8">
+            <p className="text-xs tracking-[0.15em] mb-3">PAYMENT</p>
+            <div className="border-2 border-dashed border-black/20 p-4">
+              <p className="text-sm text-black/70 mb-4 text-center">
+                Scan QR or tap to download, then transfer <span className="font-semibold">RM35</span>
+              </p>
+              <div className="flex justify-center mb-4">
+                <button
+                  type="button"
+                  onClick={() => window.open('/qr-pay.jpeg', '_blank')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      window.open('/qr-pay.jpeg', '_blank');
+                    }
+                  }}
+                  className="focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded"
+                  aria-label="Open payment QR code in new tab. Scan to transfer RM35."
+                >
+                  <img
+                    src="/qr-pay.jpeg"
+                    alt="Payment QR Code for RM35 transfer"
+                    className="w-48 h-48 object-contain hover:opacity-80 transition-opacity"
+                  />
+                </button>
+              </div>
+              <a
+                href="/qr-pay.jpeg"
+                download="eat-books-radio-payment-qr.jpg"
+                className="flex items-center justify-center gap-2 w-full py-2 border border-black/20 text-black/70 hover:bg-black/5 transition-colors text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download QR
+              </a>
+            </div>
           </div>
 
           {/* Upload Receipt */}
@@ -325,6 +453,7 @@ export default function HomePage() {
             {submitting ? "Submitting..." : "SUBMIT"}
           </button>
         </form>
+        )}
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t-2 border-black text-center">
@@ -333,6 +462,32 @@ export default function HomePage() {
           </p>
         </footer>
       </main>
+
+      {/* Drink Menu Modal */}
+      {showDrinkMenu && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowDrinkMenu(false)}
+        >
+          <div
+            className="relative max-w-md w-full max-h-[90vh] overflow-auto bg-[#F5F0E6] rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowDrinkMenu(false)}
+              className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-black/80 text-white rounded-full hover:bg-black transition-colors"
+              aria-label="Close menu"
+            >
+              &times;
+            </button>
+            <img
+              src="/soso-menu.jpg"
+              alt="Soso Signature Drink Menu"
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

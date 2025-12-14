@@ -112,8 +112,6 @@ export function RSVPModal({ isOpen, onClose, event, onSuccess }: RSVPModalProps)
     }
   };
 
-  const isFull = event.spotsLeft === 0;
-
   if (!isOpen) return null;
 
   return (
@@ -185,15 +183,12 @@ export function RSVPModal({ isOpen, onClose, event, onSuccess }: RSVPModalProps)
             </div>
 
             <h3 className="font-[family-name:var(--font-cormorant)] text-3xl font-light mb-2">
-              {success.status === REGISTRATION_STATUS.CONFIRMED
-                ? "You're In"
-                : `Waitlist #${success.position}`}
+              You&apos;re In
             </h3>
 
             <p className="text-white/60 text-sm mb-8">{success.message}</p>
 
-            {success.status === REGISTRATION_STATUS.CONFIRMED && (
-              <div className="space-y-3 mb-8">
+            <div className="space-y-3 mb-8">
                 <button
                   onClick={handleAddToGoogleCalendar}
                   className="w-full py-3 px-4 bg-white/5 border border-white/10 text-white text-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
@@ -213,7 +208,6 @@ export function RSVPModal({ isOpen, onClose, event, onSuccess }: RSVPModalProps)
                   Download .ics (Apple Calendar)
                 </button>
               </div>
-            )}
 
             <p className="text-xs text-white/40">
               Need to cancel?{" "}
@@ -225,7 +219,7 @@ export function RSVPModal({ isOpen, onClose, event, onSuccess }: RSVPModalProps)
         ) : (
           <>
             <h3 className="font-[family-name:var(--font-cormorant)] text-3xl font-light mb-2">
-              {isFull ? "Join the Waitlist" : "Reserve Your Seat"}
+              Reserve Your Seat
             </h3>
             <p className="text-sm text-white/50 mb-8 tracking-wide">
               {event.bookTitle}
@@ -304,8 +298,6 @@ export function RSVPModal({ isOpen, onClose, event, onSuccess }: RSVPModalProps)
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent"></div>
                     Processing...
                   </>
-                ) : isFull ? (
-                  "Join Waitlist"
                 ) : (
                   "Confirm Registration"
                 )}

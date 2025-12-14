@@ -27,9 +27,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const confirmedCount = event.registrations.filter(
       (r) => r.status === "confirmed"
     ).length;
-    const waitlistCount = event.registrations.filter(
-      (r) => r.status === "waitlist"
-    ).length;
 
     return NextResponse.json({
       id: event.id,
@@ -39,14 +36,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       location: event.location,
       date: event.date,
       totalSpots: event.totalSpots,
-      waitlistEnabled: event.waitlistEnabled,
-      waitlistLimit: event.waitlistLimit,
       description: event.description,
       isActive: event.isActive,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
       confirmedCount,
-      waitlistCount,
       spotsLeft: Math.max(0, event.totalSpots - confirmedCount),
     });
   } catch (error) {

@@ -180,12 +180,7 @@ export default function EventPage({ params }: Props) {
   if (!event) return null;
 
   const isFull = event.spotsLeft === 0;
-  const canRegister = event.isActive && (!isFull || event.waitlistEnabled);
-  const waitlistFull =
-    isFull &&
-    event.waitlistEnabled &&
-    event.waitlistLimit &&
-    event.waitlistCount >= event.waitlistLimit;
+  const canRegister = event.isActive && !isFull;
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -221,7 +216,7 @@ export default function EventPage({ params }: Props) {
                 <h1 className="text-2xl font-medium text-white">{event.title}</h1>
                 {isFull ? (
                   <span className="badge badge-warning whitespace-nowrap">
-                    {event.waitlistEnabled ? "Waitlist Only" : "Full"}
+                    Sold Out
                   </span>
                 ) : (
                   <span className="badge badge-success whitespace-nowrap">
@@ -298,12 +293,6 @@ export default function EventPage({ params }: Props) {
                   </svg>
                   <span>
                     {event.confirmedCount} / {event.totalSpots} spots filled
-                    {event.waitlistCount > 0 && (
-                      <span className="text-white/40">
-                        {" "}
-                        ({event.waitlistCount} on waitlist)
-                      </span>
-                    )}
                   </span>
                 </div>
               </div>
@@ -335,68 +324,31 @@ export default function EventPage({ params }: Props) {
 
             {/* Success Message */}
             {success && (
-              <div
-                className={`success-message-dark mb-8 animate-fade-in ${
-                  success.status === REGISTRATION_STATUS.CONFIRMED
-                    ? "success-message-confirmed"
-                    : "success-message-waitlist"
-                }`}
-              >
+              <div className="success-message-dark mb-8 animate-fade-in success-message-confirmed">
                 <div className="flex items-start gap-4">
-                  {success.status === REGISTRATION_STATUS.CONFIRMED ? (
-                    <svg
-                      className="w-6 h-6 text-emerald-400 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-6 h-6 text-amber-400 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  )}
+                  <svg
+                    className="w-6 h-6 text-emerald-400 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
                   <div className="flex-1">
-                    <h3
-                      className={`font-medium ${
-                        success.status === REGISTRATION_STATUS.CONFIRMED
-                          ? "text-emerald-300"
-                          : "text-amber-300"
-                      }`}
-                    >
-                      {success.status === REGISTRATION_STATUS.CONFIRMED
-                        ? "You're booked!"
-                        : `You're on the waitlist (#${success.position})`}
+                    <h3 className="font-medium text-emerald-300">
+                      You&apos;re booked!
                     </h3>
-                    <p
-                      className={`mt-1 text-sm ${
-                        success.status === REGISTRATION_STATUS.CONFIRMED
-                          ? "text-emerald-400/70"
-                          : "text-amber-400/70"
-                      }`}
-                    >
+                    <p className="mt-1 text-sm text-emerald-400/70">
                       {success.message}
                     </p>
 
                     {/* Calendar Buttons */}
-                    {success.status === REGISTRATION_STATUS.CONFIRMED && (
-                      <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-wrap gap-2">
                         <button
                           onClick={handleAddToGoogleCalendar}
                           className="inline-flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 text-sm text-white/70 hover:bg-white/10 transition-colors"
@@ -416,7 +368,6 @@ export default function EventPage({ params }: Props) {
                           Apple Calendar
                         </button>
                       </div>
-                    )}
 
                     {/* Cancel Link */}
                     <p className="mt-4 text-xs text-white/40">
@@ -434,10 +385,10 @@ export default function EventPage({ params }: Props) {
             )}
 
             {/* Registration Form */}
-            {!success && canRegister && !waitlistFull && (
+            {!success && canRegister && (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <h2 className="text-xl font-medium text-white">
-                  {isFull ? "Join the Waitlist" : "Reserve Your Spot"}
+                  Reserve Your Spot
                 </h2>
 
                 {error && (
@@ -517,8 +468,6 @@ export default function EventPage({ params }: Props) {
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-black border-t-transparent"></div>
                       Processing...
                     </>
-                  ) : isFull ? (
-                    "Join Waitlist"
                   ) : (
                     "Reserve My Spot"
                   )}
@@ -545,36 +494,12 @@ export default function EventPage({ params }: Props) {
                 <h3 className="mt-4 text-lg font-medium text-white">
                   {!event.isActive
                     ? "Registration Closed"
-                    : "This event is full"}
+                    : "Sold Out"}
                 </h3>
                 <p className="mt-2 text-white/50">
                   {!event.isActive
                     ? "This event is no longer accepting registrations."
-                    : "Unfortunately, the waitlist is also full."}
-                </p>
-              </div>
-            )}
-
-            {waitlistFull && !success && (
-              <div className="p-8 bg-amber-500/10 border border-amber-500/30 text-center">
-                <svg
-                  className="mx-auto h-12 w-12 text-amber-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <h3 className="mt-4 text-lg font-medium text-amber-300">
-                  Waitlist is Full
-                </h3>
-                <p className="mt-2 text-amber-400/70">
-                  Both the event and waitlist have reached capacity.
+                    : "All spots have been filled."}
                 </p>
               </div>
             )}

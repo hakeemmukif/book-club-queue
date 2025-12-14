@@ -5,8 +5,6 @@ export interface EventFormData {
   location: string;
   date: string;
   totalSpots: number;
-  waitlistEnabled: boolean;
-  waitlistLimit?: number;
   description?: string;
 }
 
@@ -23,14 +21,11 @@ export interface EventWithStats {
   location: string;
   date: Date;
   totalSpots: number;
-  waitlistEnabled: boolean;
-  waitlistLimit: number | null;
   description: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
   confirmedCount: number;
-  waitlistCount: number;
   spotsLeft: number;
 }
 
@@ -38,8 +33,10 @@ export interface RegistrationWithEvent {
   id: string;
   eventId: string;
   name: string;
+  email: string;
   instagramHandle: string;
+  receiptUrl?: string | null;
+  hasReceipt?: boolean;
   status: string;
-  position: number | null;
   createdAt: Date;
 }

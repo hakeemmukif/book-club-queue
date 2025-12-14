@@ -15,8 +15,6 @@ model Event {
   location         String
   date             DateTime
   totalSpots       Int
-  waitlistEnabled  Boolean        @default(true)
-  waitlistLimit    Int?           // null means unlimited waitlist
   description      String?
   isActive         Boolean        @default(true)
   reminderSentAt   DateTime?      // Track when reminder was sent
@@ -26,6 +24,7 @@ model Event {
 
   @@index([date])
   @@index([isActive])
+  @@index([isActive, date])  // Composite index for active upcoming events query
 }
 
 model Registration {
@@ -34,14 +33,15 @@ model Registration {
   name            String
   instagramHandle String
   email           String?   // Optional email for notifications
-  status          String    @default("confirmed") // "confirmed" | "waitlist"
-  position        Int?      // position in waitlist if applicable
+  receiptUrl      String?   // Base64 encoded receipt image
+  status          String    @default("confirmed")
   cancelToken     String?   @unique // Token for self-cancellation
-  notifiedAt      DateTime? // Track when waitlist notification was sent
   createdAt       DateTime  @default(now())
   event           Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@unique([eventId, email])    // Prevent duplicate registrations per event at DB level
   @@index([eventId])
-  @@index([status])
   @@index([cancelToken])
+  @@index([eventId, status])    // Composite index for confirmed registrations per event
+  @@index([eventId, createdAt]) // Index for ordered registration lists
 }

@@ -88,7 +88,7 @@ export default function EventsPage() {
                           {event.title}
                         </h2>
                         {event.spotsLeft === 0 ? (
-                          <span className="badge badge-warning">Waitlist Only</span>
+                          <span className="badge badge-warning">Sold Out</span>
                         ) : event.spotsLeft <= 3 ? (
                           <span className="badge badge-warning">
                             {event.spotsLeft} spots left

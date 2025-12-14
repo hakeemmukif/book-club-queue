@@ -8,26 +8,24 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const activeOnly = searchParams.get("active") === "true";
 
+    // Use Prisma aggregation to count confirmed registrations in the database
+    // instead of fetching all registrations and filtering in JS (N+1 fix)
     const events = await prisma.event.findMany({
       where: activeOnly ? { isActive: true } : undefined,
       include: {
         _count: {
-          select: { registrations: true },
-        },
-        registrations: {
-          select: { status: true },
+          select: {
+            registrations: {
+              where: { status: "confirmed" }
+            }
+          },
         },
       },
       orderBy: { date: "asc" },
     });
 
     const eventsWithStats = events.map((event) => {
-      const confirmedCount = event.registrations.filter(
-        (r) => r.status === "confirmed"
-      ).length;
-      const waitlistCount = event.registrations.filter(
-        (r) => r.status === "waitlist"
-      ).length;
+      const confirmedCount = event._count.registrations;
 
       return {
         id: event.id,
@@ -37,14 +35,11 @@ export async function GET(request: NextRequest) {
         location: event.location,
         date: event.date,
         totalSpots: event.totalSpots,
-        waitlistEnabled: event.waitlistEnabled,
-        waitlistLimit: event.waitlistLimit,
         description: event.description,
         isActive: event.isActive,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
         confirmedCount,
-        waitlistCount,
         spotsLeft: Math.max(0, event.totalSpots - confirmedCount),
       };
     });
@@ -87,8 +82,6 @@ export async function POST(request: NextRequest) {
         location: data.location,
         date: new Date(data.date),
         totalSpots: data.totalSpots,
-        waitlistEnabled: data.waitlistEnabled,
-        waitlistLimit: data.waitlistLimit || null,
         description: data.description || null,
       },
     });

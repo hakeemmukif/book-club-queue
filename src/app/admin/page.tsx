@@ -148,13 +148,7 @@ export default function AdminDashboard() {
                     <span>{formatDate(event.date)}</span>
                     <span>{event.location}</span>
                     <span>
-                      {event.confirmedCount}/{event.totalSpots} confirmed
-                      {event.waitlistCount > 0 && (
-                        <span className="text-yellow-600">
-                          {" "}
-                          + {event.waitlistCount} waitlist
-                        </span>
-                      )}
+                      {event.confirmedCount}/{event.totalSpots} registered
                     </span>
                   </div>
                 </div>

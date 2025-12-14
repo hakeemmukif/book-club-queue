@@ -178,14 +178,8 @@ function CancelContent() {
             </p>
             <p className="text-gray-700">
               <span className="font-medium">Status:</span>{" "}
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-medium ${
-                details.registration.status === "confirmed"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-yellow-100 text-yellow-800"
-              }`}>
-                {details.registration.status === "confirmed"
-                  ? "Confirmed"
-                  : `Waitlist #${details.registration.position}`}
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-green-100 text-green-800">
+                Confirmed
               </span>
             </p>
           </div>
@@ -206,7 +200,7 @@ function CancelContent() {
 
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-6">
                 <p className="text-yellow-800 text-sm">
-                  Are you sure you want to cancel? Your spot will be released and given to the next person on the waitlist.
+                  Are you sure you want to cancel? Your spot will be released.
                 </p>
               </div>
 

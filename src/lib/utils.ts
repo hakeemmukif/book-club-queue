@@ -2,6 +2,8 @@
  * Shared utility functions
  */
 
+import { randomBytes } from 'crypto';
+
 export function formatDate(dateString: string | Date): string {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -43,15 +45,17 @@ export function formatTime(dateString: string | Date): string {
 }
 
 /**
- * Generate a random token for cancellation links
+ * Generate a cryptographically secure random token for cancellation links
+ * Uses Node.js crypto module instead of Math.random() for security
+ *
+ * Note: base64url encoding produces 4 chars per 3 bytes, so we calculate
+ * the exact bytes needed to achieve the desired output length
  */
 export function generateToken(length: number = 32): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  // Calculate bytes needed: base64url produces 4 chars per 3 bytes
+  // Add extra byte to ensure we have enough after slicing
+  const bytesNeeded = Math.ceil((length * 3) / 4) + 1;
+  return randomBytes(bytesNeeded).toString('base64url').slice(0, length);
 }
 
 /**

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { REGISTRATION_STATUS } from "@/lib/constants";
 
 // POST /api/registrations/cancel - Cancel a registration via token
 export async function POST(request: NextRequest) {
@@ -33,50 +32,6 @@ export async function POST(request: NextRequest) {
         { error: "Cannot cancel registration for past events" },
         { status: 400 }
       );
-    }
-
-    const eventId = registration.eventId;
-    const wasConfirmed = registration.status === REGISTRATION_STATUS.CONFIRMED;
-
-    // If removing a confirmed registration, promote first waitlisted person
-    if (wasConfirmed) {
-      const firstWaitlisted = await prisma.registration.findFirst({
-        where: { eventId, status: REGISTRATION_STATUS.WAITLIST },
-        orderBy: { position: "asc" },
-      });
-
-      if (firstWaitlisted) {
-        await prisma.registration.update({
-          where: { id: firstWaitlisted.id },
-          data: {
-            status: REGISTRATION_STATUS.CONFIRMED,
-            position: null,
-            notifiedAt: new Date(), // Mark as notified (to be sent via email)
-          },
-        });
-
-        // Update positions for remaining waitlist
-        await prisma.registration.updateMany({
-          where: {
-            eventId,
-            status: REGISTRATION_STATUS.WAITLIST,
-            position: { gt: firstWaitlisted.position || 0 },
-          },
-          data: { position: { decrement: 1 } },
-        });
-
-        // TODO: Send email notification to promoted person
-      }
-    } else {
-      // Update positions for remaining waitlist
-      await prisma.registration.updateMany({
-        where: {
-          eventId,
-          status: REGISTRATION_STATUS.WAITLIST,
-          position: { gt: registration.position || 0 },
-        },
-        data: { position: { decrement: 1 } },
-      });
     }
 
     // Delete the registration
@@ -138,7 +93,6 @@ export async function GET(request: NextRequest) {
         id: registration.id,
         name: registration.name,
         status: registration.status,
-        position: registration.position,
       },
       event: registration.event,
       canCancel: new Date(registration.event.date) > new Date(),

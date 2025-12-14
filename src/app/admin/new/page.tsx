@@ -18,8 +18,6 @@ export default function NewEventPage() {
     location: "",
     date: "",
     totalSpots: 10,
-    waitlistEnabled: true,
-    waitlistLimit: "",
     description: "",
   });
 
@@ -35,12 +33,7 @@ export default function NewEventPage() {
           "Content-Type": "application/json",
           "x-admin-password": password,
         },
-        body: JSON.stringify({
-          ...formData,
-          waitlistLimit: formData.waitlistLimit
-            ? parseInt(formData.waitlistLimit)
-            : null,
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!res.ok) {
@@ -188,42 +181,6 @@ export default function NewEventPage() {
                 })
               }
             />
-          </div>
-
-          <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="waitlistEnabled"
-                className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                checked={formData.waitlistEnabled}
-                onChange={(e) =>
-                  setFormData({ ...formData, waitlistEnabled: e.target.checked })
-                }
-              />
-              <label htmlFor="waitlistEnabled" className="text-gray-700">
-                Enable waitlist when event is full
-              </label>
-            </div>
-
-            {formData.waitlistEnabled && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Waitlist Limit (leave empty for unlimited)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  className="input-field"
-                  placeholder="Unlimited"
-                  value={formData.waitlistLimit}
-                  onChange={(e) =>
-                    setFormData({ ...formData, waitlistLimit: e.target.value })
-                  }
-                />
-              </div>
-            )}
           </div>
 
           <div>
