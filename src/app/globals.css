@@ -5,6 +5,11 @@
 :root {
   --foreground-rgb: 255, 255, 255;
   --background-rgb: 0, 0, 0;
+  /* Cream theme variables */
+  --cream-bg: #F5F0E6;
+  --cream-text: #1a1a1a;
+  --cream-border: #1a1a1a;
+  --cream-muted: #666666;
 }
 
 html {
@@ -17,6 +22,18 @@ body {
   color: #fff;
   overflow-x: hidden;
   min-height: 100vh;
+  cursor: url('/cursor.png') 16 16, auto;
+}
+
+/* Cream theme body override for specific pages */
+body.cream-theme {
+  background: var(--cream-bg);
+  color: var(--cream-text);
+}
+
+/* Custom cursor for interactive elements */
+a, button, input, select, textarea, [role="button"], .cursor-pointer {
+  cursor: url('/cursor.png') 16 16, pointer;
 }
 
 /* Selection */
@@ -387,4 +404,94 @@ body {
   .hero-title {
     font-size: clamp(2.5rem, 10vw, 6rem);
   }
+}
+
+/* ========================================
+   CREAM THEME STYLES
+   ======================================== */
+
+.cream-page {
+  background: var(--cream-bg);
+  color: var(--cream-text);
+  min-height: 100vh;
+}
+
+/* Cream theme form inputs */
+.cream-input {
+  @apply w-full py-3 px-4 bg-transparent border-2 border-black/80 text-black transition-all duration-300;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.cream-input:focus {
+  @apply outline-none border-black;
+}
+
+.cream-input::placeholder {
+  @apply text-black/40;
+}
+
+/* Hand-drawn style box */
+.sketch-box {
+  border: 2px solid var(--cream-text);
+  transform: rotate(-0.5deg);
+  position: relative;
+}
+
+.sketch-box::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 1px solid var(--cream-text);
+  opacity: 0.3;
+  transform: rotate(0.3deg);
+}
+
+/* Cream theme checkbox */
+.cream-checkbox {
+  @apply w-5 h-5 border-2 border-black rounded-none bg-transparent appearance-none cursor-pointer relative;
+}
+
+.cream-checkbox:checked {
+  @apply bg-black;
+}
+
+.cream-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Upload box */
+.upload-box {
+  @apply border-2 border-dashed border-black/60 py-6 px-4 text-center cursor-pointer transition-all duration-200;
+}
+
+.upload-box:hover {
+  @apply border-black bg-black/5;
+}
+
+/* Cream submit button */
+.cream-submit {
+  @apply py-3 px-8 bg-transparent border-2 border-black text-black text-sm uppercase tracking-widest cursor-pointer transition-all duration-300;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.cream-submit:hover {
+  @apply bg-black text-white;
+}
+
+.cream-submit:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Header banner placeholder */
+.header-banner {
+  @apply w-full border-2 border-black aspect-[3/1] flex items-center justify-center;
+  background: linear-gradient(135deg, var(--cream-bg) 0%, #E8E3D9 100%);
 }

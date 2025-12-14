@@ -162,7 +162,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => copyEventUrl(event.id)}
-                    className="btn-secondary text-sm py-2 px-3"
+                    className="text-sm py-2 px-3 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                     title="Copy event URL"
                   >
                     <svg
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                   </button>
                   <Link
                     href={`/admin/event/${event.id}`}
-                    className="btn-secondary text-sm py-2 px-3"
+                    className="text-sm py-2 px-3 rounded-lg font-medium bg-primary-100 text-primary-700 hover:bg-primary-200 transition-colors"
                   >
                     View Details
                   </Link>
