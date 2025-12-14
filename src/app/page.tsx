@@ -17,8 +17,13 @@ const EVENT_DATA = {
   ticketNote: "includes 1 Soso Signature Drink",
   totalSpots: 40,
   spotsLeft: 40,
-  description:
-    "A 2-hour live DJ experience featuring bubblegum bass, nusantara bounce, psychedelic pop, baile funk, jersey club, and miami bass.",
+  description: `Welcome to the second edition of Eat Books Radio — our music segment where enthusiasts come together to explore and share new sounds, and enjoy live sets by talented guest DJs, all with a yummy Soso Signature drink in hand!
+
+Get ready for a 2-hour live DJ experience featuring MALAYGIRLDIGITAL (bubblegum bass, nusantara bounce, psychedelic pop) and EDEN (baile funk, jersey club, miami bass) — a lineup guaranteed to keep your head bouncing and your body moving.
+
+ONE RULE: LESS TALKING. MORE DANCING. SHOW LOVE TO THE DJS.
+
+You'll receive a drink ticket on the day of the event—simply present it to the barista to redeem your choice of drink.`,
 };
 
 export default function HomePage() {
@@ -153,7 +158,7 @@ export default function HomePage() {
 
         {/* Description Box */}
         <div className="sketch-box p-6 mb-10 bg-transparent">
-          <p className="text-black/80 leading-relaxed">{EVENT_DATA.description}</p>
+          <p className="text-black/80 leading-relaxed whitespace-pre-line">{EVENT_DATA.description}</p>
         </div>
 
         {/* Ticket Info */}
