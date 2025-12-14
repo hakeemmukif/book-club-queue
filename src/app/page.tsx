@@ -206,7 +206,7 @@ export default function HomePage() {
 
       <main className="max-w-xl mx-auto px-6 py-12">
         {/* Episode Title */}
-        <h1 className="text-3xl md:text-5xl font-[family-name:var(--font-cormorant)] font-bold tracking-wide text-black mb-2 whitespace-nowrap">
+        <h1 className="text-3xl md:text-5xl font-[family-name:var(--font-cormorant)] font-bold tracking-wide text-black mb-2">
           {eventData?.title || `EAT BOOKS RADIO: ${EVENT_CONFIG.episode}`}
         </h1>
 
