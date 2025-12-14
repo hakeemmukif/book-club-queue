@@ -137,7 +137,7 @@ export default function HomePage() {
 
       <main className="max-w-xl mx-auto px-6 py-12">
         {/* Episode Title */}
-        <h1 className="text-2xl md:text-3xl font-[family-name:var(--font-cormorant)] tracking-wide text-black mb-2">
+        <h1 className="text-2xl md:text-3xl font-[family-name:var(--font-cormorant)] font-bold tracking-wide text-black mb-2">
           {EVENT_DATA.title}: {EVENT_DATA.episode}
         </h1>
 
